@@ -27,6 +27,20 @@ class Managment {
     return val;
   }
 
+  void removePlayer(Player player) {
+    print("remove player:managment ${player.userId}");
+    List<Player> value;
+    if (player.isCaptain) {
+      value = captainSubject.value;
+      value.removeWhere((element) => element.userId == player.userId);
+      captainSubject.add(value);
+    } else {
+      value = usualPlayerSubject.value;
+      value.removeWhere((element) => element.userId == player.userId);
+      usualPlayerSubject.add(value);
+    }
+  }
+
   Future<dynamic> addPlayer(Player player) async => player.isCaptain
       ? captainSubject.add(updatedSubjectData(player, captainSubject))
       : usualPlayerSubject.add(

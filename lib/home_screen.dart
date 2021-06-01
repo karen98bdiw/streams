@@ -16,10 +16,13 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController controller = TextEditingController();
 
   MergeStream playersStream;
+  List<Player> players = [];
+  Timer timer;
 
   @override
   void dispose() {
     controller.dispose();
+    timer.cancel();
 
     super.dispose();
   }
@@ -31,7 +34,8 @@ class _HomeScreenState extends State<HomeScreen> {
       Managment().usualPlayerSubject.stream,
     ]);
 
-    Timer.periodic(Duration(seconds: 4), (timer) {
+    timer = Timer.periodic(Duration(seconds: 4), (timer) {
+      print("timer${timer.tick}");
       Managment().addPlayer(
         Player(
           userName: timer.tick.toString(),
@@ -51,50 +55,32 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              RaisedButton(
-                onPressed: () {
-                  print("onButtonPress");
-                },
-                child: Text("Fetch"),
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              // playerItemView(
-              //   Player(isCaptain: true, userId: "1", userName: "somebody"),
-              // ),
-              StreamBuilder(
-                stream: playersStream.asBroadcastStream(),
-                builder: (c, s) {
-                  print(s.data);
-                  if (!s.hasData) return CircularProgressIndicator();
+      body: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            StreamBuilder(
+              stream: playersStream.asBroadcastStream(),
+              builder: (c, s) {
+                print(s.data);
+                if (!s.hasData) return CircularProgressIndicator();
 
-                  return playersListView(
-                    [
-                      ...Managment().captainSubject.value ?? [],
-                      ...Managment().usualPlayerSubject.value ?? [],
-                    ],
-                  );
-                },
-              ),
-            ],
-          ),
+                players.add((s.data as List).last);
+                return playersListView(
+                  players,
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget playersListView(List<Player> data) => Container(
-        height: 300,
+        height: MediaQuery.of(context).size.height * 0.9,
         child: ListView.separated(
-            itemBuilder: (c, i) =>
-                Text("isCaptain:${data[i].isCaptain}:id:${data[i].userId}"),
+            itemBuilder: (c, i) => playerItemView(data[i]),
             separatorBuilder: (c, i) => SizedBox(
                   height: 20,
                 ),
@@ -102,17 +88,114 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
   Widget playerItemView(Player player) => Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 40,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(34),
         ),
-        child: ListTile(
-          leading: CircleAvatar(
-            radius: 30,
-            backgroundImage: NetworkImage(player.image ??
-                "https://avatars.githubusercontent.com/u/40992581?v=4"),
-            backgroundColor: Colors.green,
-          ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundImage: NetworkImage(player.image ??
+                      "https://avatars.githubusercontent.com/u/40992581?v=4"),
+                ),
+                SizedBox(
+                  width: 10,
+                ),
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: player.userName,
+                          style: TextStyle(
+                            color: Colors.purple,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        WidgetSpan(
+                          child: SizedBox(
+                            width: 10,
+                          ),
+                        ),
+                        TextSpan(
+                          text: player.isCaptain
+                              ? """will automatically become the captain if you don’t accept the request within 59 seconds."""
+                              : "\nwant to join your team",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 10,
+                ),
+                Icon(
+                  Icons.not_interested_outlined,
+                ),
+              ],
+            ),
+            SizedBox(
+              height: 30,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Expanded(
+                  child: RaisedButton(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 10,
+                    ),
+                    color: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    onPressed: () {
+                      Managment().removePlayer(player);
+                      players.removeWhere(
+                          (element) => element.userId == player.userId);
+                    },
+                    child: Text(
+                      "Reject",
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  width: 20,
+                ),
+                Expanded(
+                  child: RaisedButton(
+                    color: Colors.green,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    onPressed: () {},
+                    child: Text(
+                      "Accept",
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       );
 }
