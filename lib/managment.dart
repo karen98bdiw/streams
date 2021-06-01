@@ -17,6 +17,8 @@ class Managment {
     captainSubject.close();
   }
 
+  
+
   List<Player> updatedSubjectData(
       Player newPlayer, BehaviorSubject<List<Player>> subject) {
     var val = subject.value ?? [];
