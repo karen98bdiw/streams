@@ -59,18 +59,18 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            StreamBuilder(
-              stream: playersStream.asBroadcastStream(),
-              builder: (c, s) {
-                print(s.data);
-                if (!s.hasData) return CircularProgressIndicator();
-
-                players.add((s.data as List).last);
-                return playersListView(
-                  players,
-                );
-              },
-            ),
+            if (playersStream != null)
+              StreamBuilder(
+                stream: playersStream?.asBroadcastStream(),
+                builder: (c, s) {
+                  print(s.data);
+                  if (!s.hasData) return CircularProgressIndicator();
+                  if (s.hasData) players.add((s.data as List).last);
+                  return playersListView(
+                    players,
+                  );
+                },
+              ),
           ],
         ),
       ),
@@ -184,7 +184,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(100),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      if (player.isCaptain) {
+                        Managment().cancelStream();
+                        timer.cancel();
+                        setState(() {
+                          playersStream = null;
+                        });
+                      } else {
+                        Managment().removePlayer(player);
+                        players.removeWhere(
+                            (element) => element.userId == player.userId);
+                      }
+                    },
                     child: Text(
                       "Accept",
                       style: TextStyle(
