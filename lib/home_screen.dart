@@ -93,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
           vertical: 40,
         ),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.grey[100],
           borderRadius: BorderRadius.circular(34),
         ),
         child: Column(
