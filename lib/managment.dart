@@ -48,4 +48,11 @@ class Managment {
       : usualPlayerSubject.add(
           updatedSubjectData(player, usualPlayerSubject),
         );
+
+  void cancelStream() {
+    usualPlayerSubject.value = <Player>[];
+    captainSubject.value = <Player>[];
+    usualPlayerSubject.close();
+    captainSubject.close();
+  }
 }
