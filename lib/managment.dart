@@ -1,4 +1,4 @@
-import 'package:rxdart/rxdart.dart';
+import 'package:rxdart/rxdart.dart' as rx;
 import 'package:streams/fetch_service.dart';
 import 'package:streams/player.dart';
 
@@ -9,8 +9,8 @@ class Managment {
 
   factory Managment() => managment;
 
-  BehaviorSubject usualPlayerSubject = BehaviorSubject<List<Player>>();
-  BehaviorSubject captainSubject = BehaviorSubject<List<Player>>();
+  rx.BehaviorSubject usualPlayerSubject =rx. BehaviorSubject<List<Player>>();
+  rx.BehaviorSubject captainSubject =rx. BehaviorSubject<List<Player>>();
 
   void closeNumberSubject() {
     usualPlayerSubject.close();
@@ -20,7 +20,7 @@ class Managment {
   
 
   List<Player> updatedSubjectData(
-      Player newPlayer, BehaviorSubject<List<Player>> subject) {
+      Player newPlayer,rx. BehaviorSubject<List<Player>> subject) {
     var val = subject.value ?? [];
 
     val.add(newPlayer);
@@ -54,5 +54,25 @@ class Managment {
     captainSubject.value = <Player>[];
     usualPlayerSubject.close();
     captainSubject.close();
+  }
+
+  Stream<List<Player>> combinedStream(){
+    List<Player> allPlayers = [];
+    return rx.CombineLatestStream.combine2(usualPlayerSubject.stream,captainSubject
+    .stream, (a, b) {
+     
+       allPlayers =  [
+      ...a,
+      ...b,
+    ]
+    ;
+
+    allPlayers.sort(
+      (a,b)=>int.parse(a.userId) - int.parse(b.userId));
+    ;
+    return allPlayers;
+    }
+    );
+      
   }
 }
