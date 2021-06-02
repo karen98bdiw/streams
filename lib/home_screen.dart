@@ -18,12 +18,15 @@ class _HomeScreenState extends State<HomeScreen> {
   MergeStream playersStream;
   List<Player> players = [];
   Timer timer;
+  Map<String,Timer> capTimers = {};
+
 
   @override
   void dispose() {
     controller.dispose();
     timer.cancel();
-
+   //TODO: loop capTimers map and cancel all timers;
+   
     super.dispose();
   }
 
@@ -36,13 +39,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
     timer = Timer.periodic(Duration(seconds: 4), (timer) {
       print("timer${timer.tick}");
-      Managment().addPlayer(
-        Player(
+      var player = Player(
           userName: timer.tick.toString(),
           isCaptain: timer.tick.isEven,
           userId: timer.tick.toString(),
-        ),
+        );
+      if(player.isCaptain) capTimers[player.userId] = initCaptainPlayerTimer(player);
+
+      Managment().addPlayer(
+        player,
       );
+      
     });
 
     // playersStream.listen((event) {
@@ -67,6 +74,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   print(s.data);
                   if (!s.hasData) return CircularProgressIndicator();
                   // if (s.hasData) players.add((s.data as List).last);
+                  
+                 
+                  
                   return playersListView(
                     s.data,
                   );
@@ -128,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         TextSpan(
                           text: player.isCaptain
-                              ? """will automatically become the captain if you don’t accept the request within 59 seconds."""
+                              ? """will automatically become the captain if you don’t accept the request within ${60 - capTimers[player.userId].tick} seconds."""
                               : "\nwant to join your team",
                           style: TextStyle(
                             color: Colors.black,
@@ -146,6 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Icon(
                   Icons.not_interested_outlined,
                 ),
+                
               ],
             ),
             SizedBox(
@@ -211,4 +222,19 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       );
+
+  Timer initCaptainPlayerTimer(Player player){
+    int duration = 60;
+    Timer timer = Timer.periodic(Duration(seconds: 1), (timer) { 
+      if(timer.tick == 60){
+        Managment().removePlayer(player);
+        timer.cancel();
+      }else{
+        setState(() {
+          duration--;
+        });
+      }
+    });
+    return timer;
+  }    
 }
